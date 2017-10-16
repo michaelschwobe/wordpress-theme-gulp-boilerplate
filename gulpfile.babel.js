@@ -76,6 +76,12 @@ const pluginConfig = {
     proxy: 'localhost:8888',
   },
   cssnano: {},
+  eslint: {
+    envs: ['browser'],
+    extends: 'airbnb-base',
+    fix: true,
+    globals: ['$', 'jQuery', 'wp'],
+  },
   imagemin: [
     imagemin.gifsicle({ interlaced: true, optimizationLevel: 3 }),
     imagemin.jpegtran({ progressive: true }),
@@ -91,11 +97,6 @@ const pluginConfig = {
     sound: 'Funk',
   },
   plumber: {}, // Amended in Errors section.
-  prettier: {
-    printWidth: 100,
-    tabWidth: 2,
-    singleQuote: true,
-  },
   rename: {
     suffix: '.min',
   },
@@ -305,7 +306,7 @@ gulp.task('scripts:lint', () =>
     // Report errors.
     .pipe(plumber(pluginConfig.plumber))
     // Modularize lint output.
-    .pipe(eslint())
+    .pipe(eslint(pluginConfig.eslint))
     // Output to console.
     .pipe(eslint.format())
     // Production: Handle errors using Stop/Exit.
