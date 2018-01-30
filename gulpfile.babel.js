@@ -103,6 +103,7 @@ const pluginConfig = {
   sass: {
     outputStyle: 'expanded',
   },
+  sourcemaps: '.',
   uglify: {},
 };
 
@@ -176,7 +177,7 @@ const stylesSrcPostCSS = [
   `!${stylesSrc}/**/*.min.css`,
 ];
 const stylesSrcVendor = `${stylesSrc}/**/*.min.css`;
-const stylesSrcRoot = [`${stylesDist}/rtl.css`, `${stylesDist}/style.css`];
+const stylesSrcRoot = [`${stylesDist}/rtl.css*`, `${stylesDist}/style.css*`];
 
 // Processes Less files.
 gulp.task('styles:less', () =>
@@ -198,7 +199,7 @@ gulp.task('styles:less', () =>
     // Development: Do nothing.
     .pipe(isProd ? postcss([cssnano(pluginConfig.cssnano)]) : util.noop())
     // Save mapping for easier debugging.
-    .pipe(sourcemaps.write())
+    .pipe(sourcemaps.write(pluginConfig.sourcemaps))
     // Output.
     .pipe(gulp.dest(stylesDist))
     // Production: Do nothing.
@@ -226,7 +227,7 @@ gulp.task('styles:sass', () =>
     // Development: Do nothing.
     .pipe(isProd ? postcss([cssnano(pluginConfig.cssnano)]) : util.noop())
     // Save mapping for easier debugging.
-    .pipe(sourcemaps.write())
+    .pipe(sourcemaps.write(pluginConfig.sourcemaps))
     // Output.
     .pipe(gulp.dest(stylesDist))
     // Production: Do nothing.
@@ -252,7 +253,7 @@ gulp.task('styles:postcss', () =>
     // Development: Do nothing.
     .pipe(isProd ? postcss([cssnano(pluginConfig.cssnano)]) : util.noop())
     // Save mapping for easier debugging.
-    .pipe(sourcemaps.write())
+    .pipe(sourcemaps.write(pluginConfig.sourcemaps))
     // Output.
     .pipe(gulp.dest(stylesDist))
     // Production: Do nothing.
@@ -346,7 +347,7 @@ gulp.task('scripts:local', ['scripts:lint'], () =>
     // Development: Do nothing.
     .pipe(isProd ? uglify(pluginConfig.uglify) : util.noop())
     // Save mapping for easier debugging.
-    .pipe(sourcemaps.write())
+    .pipe(sourcemaps.write(pluginConfig.sourcemaps))
     // Output.
     .pipe(gulp.dest(scriptsDist)),
 );
