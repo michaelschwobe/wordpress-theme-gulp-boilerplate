@@ -18,9 +18,9 @@ import sourcemaps from 'gulp-sourcemaps';
 import uglify from 'gulp-uglify';
 import util from 'gulp-util';
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Configuration
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Environment configuration.
 const isProd = process.env.NODE_ENV === 'production';
@@ -106,9 +106,9 @@ const pluginConfig = {
   uglify: {},
 };
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Errors
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 function handleErrors(...args) {
   notify.onError(pluginConfig.notify).apply(this, args);
@@ -119,9 +119,9 @@ pluginConfig.plumber = {
   errorHandler: handleErrors,
 };
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Images
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Create paths.
 const imagesSrc = `${createPath('images')}/**/*.+(gif|jpg|jpeg|png|svg)`;
@@ -137,12 +137,17 @@ gulp.task('images:optimize', () =>
     .pipe(plumber(pluginConfig.plumber))
     // Production: Optimize.
     // Development: Optimize once then cache to prevent re-optimizing.
-    .pipe(isProd ? imagemin(pluginConfig.imagemin) : cache(imagemin(pluginConfig.imagemin)))
+    .pipe(
+      isProd
+        ? imagemin(pluginConfig.imagemin)
+        : cache(imagemin(pluginConfig.imagemin)),
+    )
     // Output.
     .pipe(gulp.dest(imagesDist))
     // Production: Do nothing.
     // Development: Stream changes back to 'watch' tasks.
-    .pipe(isProd ? util.noop() : browserSync.stream()));
+    .pipe(isProd ? util.noop() : browserSync.stream()),
+);
 
 // Moves specific images to root.
 gulp.task('images:root', ['images:optimize'], () =>
@@ -150,14 +155,15 @@ gulp.task('images:root', ['images:optimize'], () =>
     // Input.
     .src(imagesSrcRoot)
     // Output.
-    .pipe(gulp.dest(isProd ? paths.output : paths.root)));
+    .pipe(gulp.dest(isProd ? paths.output : paths.root)),
+);
 
 // Processes images then deletes strays.
 gulp.task('images', ['images:root'], () => del(imagesSrcRoot));
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Styles
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Create paths.
 const stylesSrc = createPath('styles');
@@ -197,7 +203,8 @@ gulp.task('styles:less', () =>
     .pipe(gulp.dest(stylesDist))
     // Production: Do nothing.
     // Development: Stream changes back to 'watch' tasks.
-    .pipe(isProd ? util.noop() : browserSync.stream()));
+    .pipe(isProd ? util.noop() : browserSync.stream()),
+);
 
 // Processes Sass files.
 gulp.task('styles:sass', () =>
@@ -224,7 +231,8 @@ gulp.task('styles:sass', () =>
     .pipe(gulp.dest(stylesDist))
     // Production: Do nothing.
     // Development: Stream changes back to 'watch' tasks.
-    .pipe(isProd ? util.noop() : browserSync.stream()));
+    .pipe(isProd ? util.noop() : browserSync.stream()),
+);
 
 // Processes (Post)CSS files.
 gulp.task('styles:postcss', () =>
@@ -249,7 +257,8 @@ gulp.task('styles:postcss', () =>
     .pipe(gulp.dest(stylesDist))
     // Production: Do nothing.
     // Development: Stream changes back to 'watch' tasks.
-    .pipe(isProd ? util.noop() : browserSync.stream()));
+    .pipe(isProd ? util.noop() : browserSync.stream()),
+);
 
 // Moves minified stylesheets.
 gulp.task('styles:vendor', () =>
@@ -265,22 +274,27 @@ gulp.task('styles:vendor', () =>
     .pipe(gulp.dest(stylesDist))
     // Production: Do nothing.
     // Development: Stream changes back to 'watch' tasks.
-    .pipe(isProd ? util.noop() : browserSync.stream()));
+    .pipe(isProd ? util.noop() : browserSync.stream()),
+);
 
 // Moves specific stylesheets to root.
-gulp.task('styles:root', ['styles:less', 'styles:sass', 'styles:postcss', 'styles:vendor'], () =>
-  gulp
-    // Input.
-    .src(stylesSrcRoot)
-    // Output.
-    .pipe(gulp.dest(isProd ? paths.output : paths.root)));
+gulp.task(
+  'styles:root',
+  ['styles:less', 'styles:sass', 'styles:postcss', 'styles:vendor'],
+  () =>
+    gulp
+      // Input.
+      .src(stylesSrcRoot)
+      // Output.
+      .pipe(gulp.dest(isProd ? paths.output : paths.root)),
+);
 
 // Processes stylesheets then deletes strays.
 gulp.task('styles', ['styles:root'], () => del(stylesSrcRoot));
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Scripts
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Create paths.
 const scriptsSrc = createPath('scripts');
@@ -311,7 +325,8 @@ gulp.task('scripts:lint', () =>
     .pipe(eslint.format())
     // Production: Handle errors using Stop/Exit.
     // Development: Handle errors using Pause/Resume.
-    .pipe(browserSync.active ? eslint.failAfterError() : eslint.failOnError()));
+    .pipe(browserSync.active ? eslint.failAfterError() : eslint.failOnError()),
+);
 
 // Processes non-minified JavaScript files.
 gulp.task('scripts:local', ['scripts:lint'], () =>
@@ -333,7 +348,8 @@ gulp.task('scripts:local', ['scripts:lint'], () =>
     // Save mapping for easier debugging.
     .pipe(sourcemaps.write())
     // Output.
-    .pipe(gulp.dest(scriptsDist)));
+    .pipe(gulp.dest(scriptsDist)),
+);
 
 // Moves minified JavaScript files.
 gulp.task('scripts:vendor', () =>
@@ -346,7 +362,8 @@ gulp.task('scripts:vendor', () =>
     // Development: Pipe only changed files to the next process.
     .pipe(isProd ? util.noop() : changed(scriptsDist))
     // Output.
-    .pipe(gulp.dest(scriptsDist)));
+    .pipe(gulp.dest(scriptsDist)),
+);
 
 // Processes all JavaScript files.
 if (isProd) {
@@ -355,9 +372,9 @@ if (isProd) {
   gulp.task('scripts', ['scripts:local', 'scripts:vendor'], browserSync.reload);
 }
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Static
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Production.
 // Moves static files.
@@ -386,11 +403,12 @@ gulp.task('static', () =>
       '!yarn.lock',
     ])
     // Output.
-    .pipe(gulp.dest(paths.output)));
+    .pipe(gulp.dest(paths.output)),
+);
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Serve & Watch
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Development.
 // Starts browserSync server.
@@ -413,9 +431,9 @@ gulp.task('watch', () => {
   gulp.watch(`${paths.root}/**/*.php`).on('change', browserSync.reload);
 });
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Cleanup
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Clears cache.
 gulp.task('clean:cache', callback => cache.clearAll(callback));
@@ -424,7 +442,9 @@ gulp.task('clean:cache', callback => cache.clearAll(callback));
 gulp.task('clean:prod', () => del(paths.output));
 
 // Deletes development generated files.
-gulp.task('clean:dev', () => del([paths.prod.root, 'screenshot.png', 'rtl.css', 'style.css']));
+gulp.task('clean:dev', () =>
+  del([paths.prod.root, 'screenshot.png', 'rtl.css', 'style.css']),
+);
 
 // Clears cache and deletes everything generated.
 gulp.task('clean:all', ['clean:cache', 'clean:prod', 'clean:dev']);
@@ -432,9 +452,9 @@ gulp.task('clean:all', ['clean:cache', 'clean:prod', 'clean:dev']);
 // Deletes environment-specific items.
 gulp.task('clean', isProd ? ['clean:cache', 'clean:prod'] : ['clean:dev']);
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Default
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 gulp.task('default', ['clean'], callback => {
   const tasksParallel = ['images', 'styles', 'scripts'];
