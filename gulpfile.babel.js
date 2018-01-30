@@ -125,15 +125,17 @@ pluginConfig.plumber = {
 //------------------------------------------------------------------------------
 
 // Create paths.
-const imagesSrc = `${createPath('images')}/**/*.+(gif|jpg|jpeg|png|svg)`;
+const imagesSrc = createPath('images');
 const imagesDist = createPath('images', 'dist');
+const imagesSrcAll = `${imagesSrc}/**/*.+(gif|jpg|jpeg|png|svg)`;
 const imagesSrcRoot = [`${imagesDist}/screenshot.png`];
+const imagesSrcWatch = imagesSrcAll;
 
 // Processes image files.
 gulp.task('images:optimize', () =>
   gulp
     // Input.
-    .src(imagesSrc)
+    .src(imagesSrcAll)
     // Report errors.
     .pipe(plumber(pluginConfig.plumber))
     // Production: Optimize.
@@ -178,6 +180,7 @@ const stylesSrcPostCSS = [
 ];
 const stylesSrcVendor = `${stylesSrc}/**/*.min.css`;
 const stylesSrcRoot = [`${stylesDist}/rtl.css*`, `${stylesDist}/style.css*`];
+const stylesSrcWatch = `${stylesSrc}/**/*.+(css|less|scss)`;
 
 // Processes Less files.
 gulp.task('styles:less', () =>
@@ -287,7 +290,10 @@ gulp.task(
       // Input.
       .src(stylesSrcRoot)
       // Output.
-      .pipe(gulp.dest(isProd ? paths.output : paths.root)),
+      .pipe(gulp.dest(isProd ? paths.output : paths.root))
+      // Production: Do nothing.
+      // Development: Stream changes back to 'watch' tasks.
+      .pipe(isProd ? util.noop() : browserSync.stream()),
 );
 
 // Processes stylesheets then deletes strays.
@@ -312,6 +318,7 @@ const scriptsSrcLocal = [
   `!${scriptsSrc}/**/*.min.js`,
 ];
 const scriptsSrcVendor = `${scriptsSrc}/**/*.min.js`;
+const scriptsSrcWatch = `${scriptsSrc}/**/*.js`;
 
 // Lints JavaScript files.
 gulp.task('scripts:lint', () =>
@@ -377,32 +384,35 @@ if (isProd) {
 // Static
 //------------------------------------------------------------------------------
 
+const staticSrcAll = [
+  '**/*',
+  '!**/.*',
+  '!**/_*/',
+  '!**/_*/**/*',
+  `!${paths.entry}/`,
+  `!${paths.entry}/**`,
+  `!${paths.node}/`,
+  `!${paths.node}/**`,
+  `!${paths.output}/`,
+  `!${paths.output}/**`,
+  `!${paths.prod.root}/`,
+  `!${paths.prod.root}/**`,
+  '!gulpfile.babel.js',
+  '!package.json',
+  '!README.+(md|txt|html)',
+  '!rtl.css',
+  '!screenshot.png',
+  '!style.css',
+  '!yarn.lock',
+];
+const staticSrcWatch = `${paths.root}/**/*.php`;
+
 // Production.
 // Moves static files.
 gulp.task('static', () =>
   gulp
     // Input.
-    .src([
-      '**/*',
-      '!**/.*',
-      '!**/_*/',
-      '!**/_*/**/*',
-      `!${paths.entry}/`,
-      `!${paths.entry}/**`,
-      `!${paths.node}/`,
-      `!${paths.node}/**`,
-      `!${paths.output}/`,
-      `!${paths.output}/**`,
-      `!${paths.prod.root}/`,
-      `!${paths.prod.root}/**`,
-      '!gulpfile.babel.js',
-      '!package.json',
-      '!README.+(md|txt|html)',
-      '!rtl.css',
-      '!screenshot.png',
-      '!style.css',
-      '!yarn.lock',
-    ])
+    .src(staticSrcAll)
     // Output.
     .pipe(gulp.dest(paths.output)),
 );
@@ -419,17 +429,13 @@ gulp.task('serve', () => browserSync.init(pluginConfig.browserSync));
 // Watches files for changes.
 gulp.task('watch', () => {
   // Images.
-  gulp.watch(imagesSrc, ['images']);
-  // Less.
-  gulp.watch(stylesSrcLess, ['styles:less']);
-  // Sass.
-  gulp.watch(stylesSrcSass, ['styles:sass']);
-  // (Post)CSS.
-  gulp.watch(stylesSrcPostCSS, ['styles:postcss']);
-  // JavaScript.
-  gulp.watch(`${scriptsSrc}/**/*.js`, ['scripts']);
-  // PHP.
-  gulp.watch(`${paths.root}/**/*.php`).on('change', browserSync.reload);
+  gulp.watch(imagesSrcWatch, ['images']);
+  // Styles.
+  gulp.watch(stylesSrcWatch, ['styles']);
+  // Scripts.
+  gulp.watch(scriptsSrcWatch, ['scripts']);
+  // Static.
+  gulp.watch(staticSrcWatch).on('change', browserSync.reload);
 });
 
 //------------------------------------------------------------------------------
@@ -444,7 +450,7 @@ gulp.task('clean:prod', () => del(paths.output));
 
 // Deletes development generated files.
 gulp.task('clean:dev', () =>
-  del([paths.prod.root, 'screenshot.png', 'rtl.css', 'style.css']),
+  del([paths.prod.root, 'screenshot.png', 'rtl.css*', 'style.css*']),
 );
 
 // Clears cache and deletes everything generated.
